@@ -1,0 +1,424 @@
+﻿@{
+    ViewBag.Title = "Budget Tool";
+}
+
+<style>
+    #editorWindow {
+        padding: 20px;
+    }
+
+    input {
+        width: 100%;    
+    }
+
+</style>
+
+<script id="transactionTemplate" type="text/x-kendo-template">
+    <tr onclick="BudgetEditor.editTransaction(#=TransactionID#);">
+        <td date>#= kendo.toString(kendo.parseDate(TransactionDate),"MM/dd/yyyy") #</td>
+        <td>#= kendo.toString(CategoryName) #</td>
+        <td>#= kendo.toString(PayeeName) #</td>
+        <td money>#= kendo.toString(TransactionAmount,"c") #</td>
+        <td command onclick="BudgetEditor.deleteTransaction(event, #=TransactionID#);">
+            <a id="btnDelete" data-role="button" href="javascript: " class="k-grid-delete">x</a>
+        </td>
+    </tr>
+</script>
+
+<script id="errorTemplate" type="text/x-kendo-template">
+    <li> #=PublicMessage#</li>
+</script>
+  
+<div id="editorWindow">
+    
+    <ul id="validationMessages">
+
+    </ul>
+
+    <table layout>
+        <colgroup>
+            <col span="1" style="width:100px;" />
+            <col span="1" />
+            <col span="1" style="width:75px;" />
+            <col span="1" style="width:250px;" />
+        </colgroup>
+        <tbody>
+            <tr>
+                <td></td>
+                <td></td>
+                <td style="text-align:right;">
+                    Date
+                </td>
+                <td>
+                    <input id="dtm" date data-bind="value: TransactionDate" />
+                </td>
+            </tr>
+
+            <tr padding medium />
+
+            <tr>
+                <td>Payee</td>
+                <td><input text id="payeeName" data-bind="value: PayeeName" /></td>
+                <td style="text-align:right;">Amount</td>
+                <td><input money format="c" data-min="0" decimals="2" data-bind="value: TransactionAmount" /></td>
+            </tr>
+
+            <tr padding large />
+
+            <tr>
+                <Td>Category</Td>
+                <td>
+                    <input id="categories" data-bind="value: CategoryID"/>
+                </td>
+            </tr>
+            <tr padding small></tr>
+            <tr>
+                <td>
+                    Notes
+                </td>
+                <td colspan="3">
+                    <textarea memo data-bind="value: TransactionMemo"></textarea>
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+    <br />
+    <div buttonBar>
+        <a href="javascript:BudgetEditor.saveTransaction()" data-role="button">Save</a>
+        <a href="javascript:BudgetEditor.closeEditor()" data-role="button">Cancel</a>
+    </div>
+</div>
+
+<div id="listView">
+
+    <a id="btnAdd" data-role="button" href="javascript:BudgetEditor.createTransaction();">Add New</a>
+    
+    <table grid>
+        <colgroup>
+            <col span="1" style="width: 125px;" />
+            <col span="1" style="width: 200px;" />
+            <col span="1" />
+            <col span="1" style="width: 150px;" />
+            <col span="1" style="width: 30px;" />
+        </colgroup>
+        <thead>
+        <tr>
+            <th date>Date</th>
+            <th>Category</th>
+            <th>Payee</th>
+            <th money>Amount</th>
+            <th command></th>
+        </tr>
+        </thead>
+        <tbody id="transactionsView_Data"></tbody>
+        <tfoot id="aggregates">
+            <tr>
+                <td right colspan="3">Total</td>
+                <td money>
+                    <span data-format="c2" data-bind="text: TransactionAmount.sum"></span>
+                </td>
+                <td />
+            </tr>
+            <tr>
+                <td right colspan="3">Average</td>
+                <td money> 
+                    <span data-format="c2" data-bind="text: TransactionAmount.average"></span>
+                </td>
+                <td />
+            </tr>
+            <tr>
+                <td right colspan="3">Count</td>
+                <td number>
+                    <span  data-bind="text: TransactionAmount.count"></span>
+                </td>
+                <td />
+            </tr>
+        </tfoot>
+    </table>
+    
+    <div id="transactionsView_Pager"></div>
+
+</div>
+
+<script>
+
+
+    var BudgetEditor = {
+        transactions: null,
+
+        aggregates: null,
+
+        messages: null,
+
+        selectedTransaction: null,
+
+        categories: null,
+
+        editorPopop: null,
+        
+        getTransactions: function () {
+
+            $.getJSON("/Budget/Transactions",
+                null,
+                function(response) {
+
+                    if (!response.Successful) {
+
+                        return;
+                    }
+
+                    BudgetEditor.transactions = new kendo.data.DataSource({
+                        data : response.Model,
+                        page: 1,
+                        pageSize: 10,
+                        sort: [
+                            { field: "TransactionDate", dir: "desc" },
+                            { field: "TransactionID", dir: "desc" }
+                        ],
+
+                        aggregate: [
+                            { field: "TransactionAmount", aggregate: "sum" },
+                            { field: "TransactionAmount", aggregate: "average" },
+                            { field: "TransactionAmount", aggregate:"count"}
+                        ],
+                        schema: {
+                            // the data, which the data source will be bound to is in the "list" field of the response
+                            //data: "Model",
+                            model: {
+                                id: "TransactionID"
+                            }
+                        }
+                    });
+
+                    $("#transactionsView_Pager").kendoPager({
+                        dataSource: BudgetEditor.transactions,
+                        autoBind: true
+                    });
+
+                    $("#transactionsView_Data").kendoListView({
+                        dataSource: BudgetEditor.transactions,
+                        template: kendo.template($("#transactionTemplate").html())
+                    });
+
+                    BudgetEditor.updateAggregates();
+
+                    
+
+                });
+        },
+
+        getCategories: function() {
+
+
+            $.getJSON("/Budget/Categories",
+                null,
+                function(response) {
+
+                    if (!response.Successful) {
+
+                        return;
+                    }
+                    BudgetEditor.categories = new kendo.data.DataSource({
+                        data: response.Model
+
+                    });
+
+                    $("#categories").kendoDropDownList({
+                        dataTextField: "CategoryName",
+                        dataValueField: "CategoryID",
+                        dataValuePrimitive: true,
+                        dataSource: BudgetEditor.categories
+                    });
+
+                });
+        },
+
+        updateAggregates: function() {
+
+            if (!BudgetEditor.aggregates) {
+
+                BudgetEditor.aggregates = kendo.observable(BudgetEditor.transactions.aggregates());
+                kendo.bind($('#aggregates'), BudgetEditor.aggregates);
+
+            } else {
+
+                BudgetEditor.aggregates.set("TransactionAmount",BudgetEditor.transactions.aggregates().TransactionAmount);
+
+            }
+        },
+        
+        editTransaction: function (trxID) {
+
+            var trx = BudgetEditor.transactions.get(trxID);
+
+            if (!trx) {
+                return;
+            }
+
+            //make a copy of the transaction in case the user cancels their edit
+            var trxCopy = _.clone(trx, true);
+            trxCopy.unbind();
+
+
+            BudgetEditor.selectedTransaction = trxCopy;
+
+            BudgetEditor.showEditor();
+
+        },
+
+        createTransaction: function () {
+
+            BudgetEditor.selectedTransaction = kendo.observable({
+                TransactionDate: undefined,
+                CategoryID: -1,     //This cannot be set to undefined/null or there's problems with the binding of the id instead of the object for the category
+                PayeeName: undefined,
+                TransactionAmount: undefined
+            });
+
+            BudgetEditor.showEditor();
+        },
+
+        saveTransaction: function() {
+
+            var trxJSON = JSON.stringify(BudgetEditor.selectedTransaction);
+            
+            $.post("/Budget/SaveTransaction",
+                trxJSON,
+                function(response) {
+
+                    response = JSON.parse(response);
+
+                    if (!response.Successful) {
+
+                        BudgetEditor.updateMessages(response);
+                        return;
+                    }
+
+                    if (BudgetEditor.selectedTransaction.TransactionID) {
+                        var existingTrx = BudgetEditor.transactions.get(BudgetEditor.selectedTransaction.TransactionID);
+                        BudgetEditor.transactions.remove(existingTrx);
+                    }
+                    BudgetEditor.transactions.add(response.Model);
+
+                    BudgetEditor.updateAggregates();
+
+
+                    //TODO:  Navigate to saved transaction and maybe highlight briefly.  it may be on a different page
+
+                    BudgetEditor.closeEditor();
+                });
+
+        },
+
+        deleteTransaction: function (event, transactionID) {
+
+
+            event.stopPropagation();
+
+            kendo.confirm("Are you sure that you want to delete Transaciton #" + transactionID + "?")
+                .then(function() {
+                    var url = "/Budget/DeleteTransaction/" + transactionID;
+
+                    var trx = BudgetEditor.transactions.get(transactionID);
+
+
+                    $.getJSON(url,
+                        null,
+                        function (response) {
+                      
+                            if (!response.Successful) {
+
+                                console.error("Failed AJAX");
+                                console.error(response);
+                                alert('an unexpected error has occurred');
+                                return;
+                            }
+
+                            BudgetEditor.transactions.remove(trx);
+                            BudgetEditor.updateAggregates();
+                        });
+                });
+
+            
+        },
+
+        showEditor: function () {
+
+            kendo.bind($("#editorWindow"), BudgetEditor.selectedTransaction);
+
+           
+
+            var title = BudgetEditor.selectedTransaction.TransactionID
+                ? "Transaction #" + BudgetEditor.selectedTransaction.TransactionID
+                : "New Transaction";
+
+            BudgetEditor.editorPopop.data("kendoWindow")
+                .title(title)
+                .center()
+                .open();
+
+            BudgetEditor.editorPopop.data("kendoWindow").center().open();
+
+            BudgetEditor.updateMessages();
+            //TODO:  Focus the date input
+
+        },
+
+        closeEditor: function () {
+
+            BudgetEditor.editorPopop.data("kendoWindow").close();
+            kendo.unbind($("#editorWindow"));
+            BudgetEditor.selectedTransaction = null;
+            BudgetEditor.updateMessages();
+        },
+        
+        updateMessages: function (response) {
+
+            BudgetEditor.messages = (response != null)
+                ? kendo.observable({ Messages: response.Messages })
+                : kendo.observable({ Messages: [] });
+
+            $("#validationMessages").kendoListView({
+                dataSource: BudgetEditor.messages.Messages,
+                template: kendo.template($("#errorTemplate").html())
+            });
+        },
+
+        initialize: function() {
+
+            $("input[date]").kendoDatePicker({
+                dateInput: true
+            });
+
+            $("input[money]").kendoNumericTextBox({
+                style: "width:100%; text-align:right;"
+
+            });
+
+           
+
+            BudgetEditor.editorPopop = $("#editorWindow").kendoWindow(
+                {
+                    width: "900px",
+                    modal: true,
+                    pinned: true,
+                    draggable: false,
+                    resizable: false,
+                    visible: false,
+                    actions: ["close"]
+                });
+
+            BudgetEditor.getTransactions();
+            BudgetEditor.getCategories();
+        }
+
+       
+    };
+
+    BudgetEditor.initialize();
+   
+
+
+
+</script>

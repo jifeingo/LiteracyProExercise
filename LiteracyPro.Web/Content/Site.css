@@ -1,0 +1,115 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+    font-family: Segoe UI,"Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14pt;
+    font-weight: lighter;
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Override the default bootstrap behavior where horizontal description lists 
+   will truncate terms that are too long to fit in the left column 
+*/
+.dl-horizontal dt {
+    white-space: normal;
+}
+
+#validationMessages {
+    background-color: pink;
+    border: none;
+}
+
+
+table {
+    width: 100%;
+}
+
+table input, table textarea, table select {
+    width: 100%;
+    height: 100%;
+    
+}
+
+textarea {
+    height: 50px;
+}
+
+table[grid] {
+}
+
+table[grid] th {
+    background-color: silver;
+    table-layout: fixed;
+    border: solid 1px silver;
+    padding: 2px;
+    vertical-align: bottom;
+    font-weight: normal;
+}
+
+table[grid] td {
+    border: solid 1px silver;
+    padding: 2px;
+}
+
+    table[grid] td[money], th[money], td[number], th[number] {
+        text-align: right;
+    }
+
+table[grid] td[date], th[date] {
+    text-align: center;
+}
+
+table[grid] td[command], th[command] {
+    text-align: center;
+}
+
+table[grid] tr:hover {
+    cursor: pointer;
+    background-color: beige;
+}
+
+table[grid] tfoot {
+    background-color: whitesmoke;
+}
+
+table[layout] {
+    table-layout: fixed;
+}
+
+
+    table[layout] td {
+
+        padding-right: 10px;
+        vertical-align: top;
+    }
+
+table[layout] tr[padding] { height: 10px; }
+table[layout] tr[padding][large] { height: 20px; }
+table[layout] tr[padding][large] { height: 30px; }
+
+
+
+td[right] {
+    text-align: right;
+}
+
+div[buttonBar] {
+    text-align: center;
+    padding: 10px; 
+}
+
+div[buttonBar][left] {
+    text-align: left;
+    padding-left: 0;
+}
+
+
+/* Hide kendo ui dialog title (localhost:4494 says)*/
+.k-dialog .k-window-titlebar .k-dialog-title {
+    visibility: hidden;
+}
