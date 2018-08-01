@@ -11,39 +11,40 @@ INSERT INTO	dbo.Category
 	,	IsAcive
 )
 SELECT	CategoryID				=	1
-	,	CategoryName			=	'Food'
+	,	CategoryName				=	'Food'
 	,	CategoryDescription		=	NULL
-	,	CSSClass				=	'Cat_Food'
+	,	CSSClass					=	'Cat_Food'
 	,	DisplayOrderID			=	10
 	,	IsAcive					=	1
 UNION ALL
 SELECT	CategoryID				=	2
-	,	CategoryName			=	'Entertainment'
+	,	CategoryName				=	'Entertainment'
 	,	CategoryDescription		=	NULL
-	,	CSSClass				=	'Cat_Entertainment'
+	,	CSSClass					=	'Cat_Entertainment'
 	,	DisplayOrderID			=	20
 	,	IsAcive					=	1
 UNION ALL
 SELECT	CategoryID				=	3
-	,	CategoryName			=	'Home Expenses'
+	,	CategoryName				=	'Home Expenses'
 	,	CategoryDescription		=	NULL
-	,	CSSClass				=	'Cat_Home'
+	,	CSSClass					=	'Cat_Home'
 	,	DisplayOrderID			=	30
 	,	IsAcive					=	1
 UNION ALL
 SELECT	CategoryID				=	4
-	,	CategoryName			=	'Medical'
+	,	CategoryName				=	'Medical'
 	,	CategoryDescription		=	NULL
-	,	CSSClass				=	'Cat_Medical'
+	,	CSSClass					=	'Cat_Medical'
 	,	DisplayOrderID			=	40
 	,	IsAcive					=	1
 UNION ALL
 SELECT	CategoryID				=	5
-	,	CategoryName			=	'Travel'
+	,	CategoryName				=	'Travel'
 	,	CategoryDescription		=	NULL
-	,	CSSClass				=	'Cat_Travel'
+	,	CSSClass					=	'Cat_Travel'
 	,	DisplayOrderID			=	50
 	,	IsAcive					=	1
+
 SET IDENTITY_INSERT dbo.Category OFF
 go
 
